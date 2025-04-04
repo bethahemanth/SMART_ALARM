@@ -1,0 +1,56 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button color="warning" (click)="router.navigate(['home/alarms'])">Cancel</ion-button>
+    </ion-buttons>
+    <ion-title> {{ isedit ? 'Edit Alarm' : 'Save Alarm' }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button color="primary" (click)="saveAlarm()"> Save</ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+
+<ion-content>
+  <ion-item>
+    <ion-label position="stacked">Time</ion-label>
+    <ion-datetime
+    presentation="time"
+    [(ngModel)]="alarm.time"
+    preferWheel="true">
+  </ion-datetime>
+  </ion-item>
+
+  <ion-item>
+    <ion-label>Repeat</ion-label>
+    <ion-select [(ngModel)]="alarm.repeat">
+      <ion-select-option value="Never">Never</ion-select-option>
+      <ion-select-option value="Daily">Daily</ion-select-option>
+      <ion-select-option value="Weekdays">Weekdays</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-item>
+    <ion-label position="stacked">Label</ion-label>
+    <ion-input [(ngModel)]="alarm.label"></ion-input>
+  </ion-item>
+
+  <ion-item>
+    <ion-label>Sound</ion-label>
+    <ion-select [(ngModel)]="alarm.sound" (ionChange)="playSound($event)">
+      <ion-select-option value="Default">Default</ion-select-option>
+      <ion-select-option value="Radial">Radial</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-item>
+    <ion-label>Snooze</ion-label>
+    <ion-select [(ngModel)]="alarm.snooze" >
+      <ion-select-option value="5">5</ion-select-option>
+      <ion-select-option value="10">10</ion-select-option>
+      <ion-select-option value="15">15</ion-select-option>
+    </ion-select>
+  </ion-item>
+
+  <ion-button expand="full" color="danger" (click)="deleteAlarm()">Delete Alarm</ion-button>
+</ion-content>

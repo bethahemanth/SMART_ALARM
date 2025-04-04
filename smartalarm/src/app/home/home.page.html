@@ -1,0 +1,22 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Alarms</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="router.navigate(['home/addalarm'])">
+        <ion-icon name="add-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item *ngFor="let alarm of alarms" (click)="editAlarm(alarm)">
+      <ion-label>
+        <h2>{{ alarm.time | date: 'hh:mm a' }}</h2>
+        <p>{{ alarm.label }}</p>
+      </ion-label>
+      <ion-toggle [(ngModel)]="alarm.active"></ion-toggle>
+    </ion-item>
+  </ion-list>
+</ion-content>
