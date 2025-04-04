@@ -32,6 +32,9 @@ export class AlarmItemComponent  implements OnInit {
   }
 
   deleteAlarm() {
+    alert('Alarm Deleted');
+    this.dataservice.DeleteAlarm(this.alarm.id);
+    console.log(this.alarm.id);
     this.router.navigate(['home/alarms']);
   }
 
