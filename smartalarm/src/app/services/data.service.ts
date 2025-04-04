@@ -35,6 +35,7 @@ export class DataService {
   this.alarms.push(alarm);
   this.alarms.map((x,i)=>x.id=i+1);
  } 
+ 
  public DeleteAlarm(id:number){
   const i=this.alarms.findIndex(x=>x.id==id);
   if(i!==-1)

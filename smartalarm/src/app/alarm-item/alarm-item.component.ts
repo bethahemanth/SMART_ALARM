@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation } from '@angular/core';
 
 import { ActivatedRoute, Router } from '@angular/router';
 import { Alarm, DataService } from '../services/data.service';
@@ -7,6 +7,7 @@ import { Alarm, DataService } from '../services/data.service';
   selector: 'app-alarm-item',
   templateUrl: './alarm-item.component.html',
   styleUrls: ['./alarm-item.component.scss'],
+  encapsulation: ViewEncapsulation.ShadowDom,
   standalone:false
 })
 export class AlarmItemComponent  implements OnInit {
