@@ -1,6 +1,7 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Alarm } from '../Models/alarm.model';
 import { AlarmService } from '../services/alarm.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-alarm',
@@ -8,7 +9,7 @@ import { AlarmService } from '../services/alarm.service';
   styleUrls: ['./alarm.component.scss'],
   standalone: false
 })
-export class AlarmComponent implements OnInit {
+export class AlarmComponent implements OnInit ,OnDestroy,AfterViewInit{
   alarms: Alarm[] = [];
   selectedAlarmId: number | null = null;
   currentlyEditingId: number | null = null;
@@ -19,11 +20,35 @@ export class AlarmComponent implements OnInit {
 
   dayOptions: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  constructor(private alarmService: AlarmService,private cdRef:ChangeDetectorRef) {}
-
-  ngOnInit(): void {
-    this.alarms = this.alarmService.getAlarms();
+  constructor(private alarmService: AlarmService,private cdRef:ChangeDetectorRef,private router:Router) {}
+  ngAfterViewInit(): void {
+    this.alarms = this.alarmService.getAlarms(); // Fetch alarms from the service
+    this.alarmService.setalarms(this.alarms); // Set the alarms in the service
+    this.cdRef.detectChanges(); // Trigger change detection to update the view
   }
+  ngOnDestroy(): void {
+    this.alarmService.setalarms(this.alarms); 
+   this.alarmService.saveAlarms(this.alarms); // Save alarms to localStorage when component is destroyed
+   console.log('Alarms saved to localStorage:', this.alarms);
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  handleBeforeUnload(event: Event): void {
+    this.alarmService.setalarms(this.alarms); 
+    this.alarmService.saveAlarms(this.alarms);
+    console.log('Alarms saved on browser close/refresh:', this.alarms);
+  }
+
+  openSoundPicker(alarm: Alarm) {
+   this.router.navigate(['/soundpicker'], { state: { alarmId: alarm.id } });
+  }
+  ngOnInit(): void {
+  }
+
+  getSoundName(id: string): string {
+    const sound = this.alarmService.getSoundById(id); // Fetch sound name by ID
+    return sound; // Return sound name or default message
+    }
 
   toggleAlarm(alarm: Alarm): void {
     this.alarmService.toggleAlarm(alarm.id);
@@ -87,6 +112,7 @@ export class AlarmComponent implements OnInit {
     if (this.newTime) {
       alarm.time = this.formatTime(this.newTime); // Save the formatted time
       console.log(`Time saved for Alarm ID ${alarm.id}: ${alarm.time}`);
+      this.alarmService.ScheduleAlarmForDays(alarm);
     }
     this.currentlyEditingTimeId = ''; // Exit editing mode
     this.cdRef.detectChanges(); // Trigger change detection to update the view

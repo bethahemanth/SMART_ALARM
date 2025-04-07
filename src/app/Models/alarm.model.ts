@@ -5,5 +5,6 @@ export interface Alarm {
     days: string[];
     enabled: boolean;
     group: 'Active' | 'Others';
+    sound:string;
   }
   

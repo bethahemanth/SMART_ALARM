@@ -86,9 +86,9 @@
           </button>
         </div>
 
-        <ion-item lines="none">
+        <ion-item button (click)="openSoundPicker(alarm)" lines="none">
           <ion-label>Ringtone</ion-label>
-          <ion-checkbox></ion-checkbox>
+          <ion-note slot="end">{{ getSoundName(alarm.sound) || 'Select Sound' }}</ion-note>
         </ion-item>
         <ion-item lines="none">
           <ion-label>Notification</ion-label>

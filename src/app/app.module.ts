@@ -5,6 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { AppComponent } from './app.component';
 import { AlarmModule } from './alarm/alarm.module'; 
 import { AppRoutingModule } from './app-routing.module';
+import { SoundpickerComponent } from './soundpicker/soundpicker.component';
 @NgModule({
   declarations: [AppComponent],
   imports: [
