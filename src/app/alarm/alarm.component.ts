@@ -18,15 +18,11 @@ export class AlarmComponent implements OnInit {
   
 
   dayOptions: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  selectedDaysMap: { [id: number]: string[] } = {};
 
   constructor(private alarmService: AlarmService,private cdRef:ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.alarms = this.alarmService.getAlarms();
-    this.alarms.forEach(alarm => {
-      this.selectedDaysMap[alarm.id] = [...alarm.days];
-    });
   }
 
   toggleAlarm(alarm: Alarm): void {
@@ -131,7 +127,6 @@ export class AlarmComponent implements OnInit {
 
   logAllSelectedValues(): void {
     console.log('Alarms:', this.alarms);
-    console.log('Selected Days Map:', this.selectedDaysMap);
     this.alarms.forEach(alarm => {
       console.log(`Alarm ID: ${alarm.id}`);
       console.log(`Label: ${alarm.label}`);
