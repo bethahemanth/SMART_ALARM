@@ -4,12 +4,7 @@ import { AlarmComponent } from './alarm/alarm.component';
 
 const routes: Routes = [
   {
-    path: 'home',
-    loadChildren: () => import('./home/home.module').then( m => m.HomePageModule)
-  },
-  {
-    
-      path: 'alarm',
+      path: '',
       component: AlarmComponent
   },
   ];@NgModule({
