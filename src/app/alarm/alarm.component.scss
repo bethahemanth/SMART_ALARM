@@ -1,0 +1,93 @@
+.section {
+    padding: 16px;
+  }
+  
+  .alarm-card {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .alarm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .label {
+    font-weight: bold;
+    font-size: 16px;
+    color: red;
+    cursor: pointer;
+  }
+  
+  .label-input {
+    font-size: 16px;
+    color: red;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    outline: none;
+    width: 100%;
+  }
+  
+  .time {
+    font-size: 24px;
+    color: #333;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  
+  .days {
+    font-size: 14px;
+    color: #777;
+    margin-top: 2px;
+  }
+  
+  .right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .options {
+    margin-top: 10px;
+  }
+  
+  .day-buttons {
+    display: flex;
+    gap: 6px;
+    padding-bottom: 10px;
+  }
+  
+  .day-btn {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background-color: #eee;
+    cursor: pointer;
+  }
+  
+  .day-btn.active {
+    background-color: #f44336;
+    color: white;
+    border-color: #f44336;
+  }
+  .time-input {
+    font-size: 20px;
+    color: #333;
+    padding: 4px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    outline: none;
+    width: 100%;
+  }
+
+  .time-picker {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+

@@ -1,0 +1,135 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Alarm</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <div class="section">
+    <h2>Active</h2>
+    <ng-container *ngFor="let alarm of activeAlarms">
+      <ng-container *ngTemplateOutlet="alarmItemTemplate; context: { alarm: alarm }"></ng-container>
+    </ng-container>
+  </div>
+
+  <div class="section">
+    <h2>Others</h2>
+    <ng-container *ngFor="let alarm of otherAlarms">
+      <ng-container *ngTemplateOutlet="alarmItemTemplate; context: { alarm: alarm }"></ng-container>
+    </ng-container>
+  </div>
+
+  <ng-template #alarmItemTemplate let-alarm="alarm">
+    <div class="alarm-card">
+      <div class="alarm-header">
+        <div>
+          <!-- Label Section -->
+          <div class="label" (click)="startEditing(alarm)">
+            <ng-container *ngIf="currentlyEditingId !== alarm.id">
+              {{ alarm.label || '+ Add Label' }}
+            </ng-container>
+          </div>
+          <input
+            *ngIf="currentlyEditingId === alarm.id"
+            [(ngModel)]="newLabel"
+            (blur)="saveLabel(alarm)"
+            (keyup.enter)="saveLabel(alarm)"
+            class="label-input"
+            placeholder="Enter label"
+            autofocus
+          />
+
+          <!-- Time Section -->
+          <div class="time" (click)="startEditingTime(alarm)">
+            <ng-container *ngIf="currentlyEditingTimeId !== alarm.id">
+              {{ alarm.time }}
+            </ng-container>
+          </div>
+
+          <div *ngIf="currentlyEditingTimeId === alarm.id">
+            <ion-datetime
+              [(ngModel)]="newTime"
+              (ionChange)="updateTime($event)"
+              class="time-picker"
+              presentation="time"
+              hour-cycle="h12"
+              [value]="alarm.time"
+            ></ion-datetime>
+            <ion-button (click)="saveTime(alarm)" expand="block" color="primary" size="small">
+              Save
+            </ion-button>
+            <ion-button (click)="cancelTimeEditing()" expand="block" color="medium" size="small">
+              Cancel
+            </ion-button>
+          </div>
+
+          <div class="days">{{ alarm.days.join(', ') }}</div>
+        </div>
+
+        <!-- Toggle & Options Icon -->
+        <div class="right">
+          <ion-toggle [checked]="alarm.enabled" (ionChange)="toggleAlarm(alarm)" color="danger" size="small"></ion-toggle>
+          <ion-icon name="chevron-down-outline" (click)="toggleOptions(alarm.id)"></ion-icon>
+        </div>
+      </div>
+
+      <!-- Options Panel -->
+      <div *ngIf="selectedAlarmId === alarm.id" class="options">
+        <div class="day-buttons">
+          <button
+            *ngFor="let day of dayOptions"
+            (click)="toggleDay(alarm, day)"
+            [class.active]="alarm.days?.includes(day)"
+            class="day-btn"
+          >
+            {{ day.charAt(0) }}
+          </button>
+        </div>
+
+        <ion-item button (click)="openSoundPicker(alarm)" lines="none">
+          <ion-label>Ringtone</ion-label>
+          <ion-note slot="end">{{ getSoundName(alarm.sound) || 'Select Sound' }}</ion-note>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Notification</ion-label>
+          <ion-checkbox></ion-checkbox>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Vibrate</ion-label>
+          <ion-checkbox></ion-checkbox>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Snooze Duration</ion-label>
+          <ion-checkbox></ion-checkbox>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label>Delete</ion-label>
+          <ion-icon slot="end" name="trash"></ion-icon>
+        </ion-item>
+      </div>
+    </div>
+  </ng-template>
+
+  <ion-fab vertical="bottom" horizontal="center" slot="fixed">
+    <ion-fab-button color="danger">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <ion-footer>
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-button>
+          <ion-icon name="settings-outline"></ion-icon>
+          Settings
+        </ion-button>
+      </ion-buttons>
+      <ion-buttons slot="end">
+        <ion-button>
+          <ion-icon name="notifications-outline"></ion-icon>
+          Notifications
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-footer>
+</ion-content>
