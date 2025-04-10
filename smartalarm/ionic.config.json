@@ -1,7 +1,0 @@
-{
-  "name": "smartalarm",
-  "integrations": {
-    "capacitor": {}
-  },
-  "type": "angular"
-}

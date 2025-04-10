@@ -29,6 +29,7 @@
               {{ alarm.label || '+ Add Label' }}
             </ng-container>
           </div>
+          
           <input
             *ngIf="currentlyEditingId === alarm.id"
             [(ngModel)]="newLabel"
@@ -58,7 +59,7 @@
             <ion-button (click)="saveTime(alarm)" expand="block" color="primary" size="small">
               Save
             </ion-button>
-            <ion-button (click)="cancelTimeEditing()" expand="block" color="medium" size="small">
+            <ion-button (click)="cancelTimeEditing(alarm)" expand="block" color="medium" size="small">
               Cancel
             </ion-button>
           </div>
@@ -68,7 +69,12 @@
 
         <!-- Toggle & Options Icon -->
         <div class="right">
-          <ion-toggle [checked]="alarm.enabled" (ionChange)="toggleAlarm(alarm)" color="danger" size="small"></ion-toggle>
+          <ion-toggle 
+            [checked]="isAlarmEnabled[alarm.id]" 
+            (ionChange)="onToggleChange(alarm, $event)" 
+            color="danger" 
+            size="small">
+          </ion-toggle>
           <ion-icon name="chevron-down-outline" (click)="toggleOptions(alarm.id)"></ion-icon>
         </div>
       </div>
