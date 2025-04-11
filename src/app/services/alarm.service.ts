@@ -9,7 +9,8 @@ export class AlarmService {
   constructor() { 
     this.createNotificationChannel();
     this.requestNotificationPermission();
-    
+    this.registerActionTypes();
+    this.listenToNotificationActions();
   }
   sounds = [
     { id: 1, name: 'Morning Breeze', path: 'assets/sounds/alarm1.mp3' ,alarmId:1},
@@ -34,7 +35,6 @@ export class AlarmService {
     if (storedAlarms) {
       return JSON.parse(storedAlarms);
     } else {
-      // If nothing in localStorage, store initial alarms
       localStorage.setItem('alarms', JSON.stringify(this.alarms));
       return this.alarms;
     }
@@ -75,6 +75,38 @@ export class AlarmService {
       console.log(`✅ Alarm scheduled: ${alarm.label} at ${alarm.time}`);
     });
    }
+
+   registerActionTypes() {
+    LocalNotifications.registerActionTypes({
+      types: [
+        {
+          id: 'ALARM_ACTIONS',
+          actions: [
+            {
+              id: 'STOP_ALARM',
+              title: '🛑 Stop',
+              foreground: true
+            }
+          ]
+        }
+      ]
+    });
+  }
+
+  listenToNotificationActions() {
+    LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
+      const notificationId = event.notification.id;
+      const actionId = event.actionId;
+
+      if (actionId === 'STOP_ALARM') {
+        this.cancelAlarm(notificationId); // Cancel the alarm
+        console.log(`🛑 Alarm stopped via notification for id: ${notificationId}`);
+      }
+    });
+  }
+
+  
+
    ScheduleAlarmForDays(alarm: Alarm) {
     const now = new Date();
   
@@ -122,8 +154,7 @@ export class AlarmService {
         console.log(`⏩ Skipping past alarm for ${day}`);
       }
     });
-  }
-  
+  } 
    async createNotificationChannel() {
     await LocalNotifications.createChannel({
       id: 'alarm1-channel',
@@ -217,6 +248,7 @@ export class AlarmService {
       console.log(`✅ Alarm canceled: ${alarmId}`);
     });
   }
+  
   getAlarmById(id: number): Alarm | undefined {
     return this.alarms.find(alarm => alarm.id === id);
   } 
