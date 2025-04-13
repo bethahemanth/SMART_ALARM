@@ -24,11 +24,14 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.alarms = this.alarmService.getAlarms(); // Fetch alarms from the service
+
+    // Ensure all alarms are turned off by default
     this.alarms.forEach(alarm => {
-      this.isAlarmEnabled[alarm.id] = !alarm.enabled; // Initialize toggle states
+      alarm.enabled = false; // Turn off all alarms
+      this.isAlarmEnabled[alarm.id] = false; // Initialize toggle states to false
     });
-    this.alarmService.setalarms(this.alarms); // Set the alarms in the service
-    this.cdRef.detectChanges();
+    this.alarmService.setalarms(this.alarms); // Save the updated alarms in the service
+    this.cdRef.detectChanges(); // Trigger change detection to update the view
   }
 
   ngOnDestroy(): void {
@@ -127,7 +130,7 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
     console.log('Save button clicked');
     console.log(`New Time: ${this.newTime}`);
     if (this.newTime) {
-      const formattedTime = this.formatTime(this.newTime); // Format the new time
+      const formattedTime = this.formatTime(this.newTime); 
       if (alarm.time !== formattedTime) {
         alarm.time = formattedTime; // Update the alarm's time only if it has changed
         console.log(`Time saved for Alarm ID ${alarm.id}: ${alarm.time}`);
