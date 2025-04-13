@@ -8,6 +8,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 export class AlarmService {
   constructor() { 
     this.createNotificationChannel();
+    this.createSilentNotificationChannel(); // Initialize the silent channel
     this.requestNotificationPermission();
     this.registerActionTypes();
     this.listenToNotificationActions();
@@ -148,11 +149,11 @@ export class AlarmService {
                 title: `⏰ Upcoming Alarm`,
                 body: `Alarm will ring soon at ${alarm.time}`,
                 schedule: { at: preAlarmDate },
-                channelId: `alarm${alarm.sound || "1"}-channel`,
+                channelId: 'silent-channel', // Use the silent channel
                 actionTypeId: 'PRE_ALARM_ACTIONS',
                 autoCancel: false,
-                silent: false,
-                sound: undefined
+                silent: true 
+                
               }
             ]
           }).then(() => {
@@ -250,6 +251,23 @@ export class AlarmService {
     });
 
    }
+
+   async createSilentNotificationChannel() {
+    await LocalNotifications.createChannel({
+      id: 'silent-channel',
+      name: 'Silent Notifications',
+      description: 'Pre-alarm notifications with no sound',
+      importance: 3, // Default importance
+      visibility: 1,
+      sound: undefined, // No sound
+      vibration: false
+    }).then(() => {
+      console.log('✅ Silent notification channel created');
+    }).catch(err => {
+      console.error('❌ Error creating silent notification channel', err);
+    });
+  }
+
    async requestNotificationPermission() {
     const permission = await LocalNotifications.requestPermissions();
     if (permission.display !== 'granted') {
@@ -293,7 +311,7 @@ export class AlarmService {
   scheduleDailyNotification(): void {
     const now = new Date();
     const notificationTime = new Date(now);
-    notificationTime.setHours(22, 0, 0, 0); // Set time to 10:00 PM
+    notificationTime.setHours(4, 50, 0, 0); 
 
     if (notificationTime.getTime() <= now.getTime()) {
       // If it's already past 10:00 PM today, schedule for tomorrow
