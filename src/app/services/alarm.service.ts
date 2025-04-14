@@ -362,6 +362,7 @@ scheduleDailyNotification(): void {
   if (notificationTime <= now) {
     notificationTime.setDate(notificationTime.getDate());
   }
+  //
   LocalNotifications.createChannel({
     id: 'daily-notification-channel',
     name: 'Daily Notifications',
