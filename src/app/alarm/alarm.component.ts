@@ -17,23 +17,30 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
   currentlyEditingTimeId: number | string = '';
   newTime: string = '';
   isAlarmEnabled: { [key: number]: boolean } = {}; 
+  isAddAlarmModalOpen: boolean = false; 
+  newAlarmTime: string = ''; 
+  newAlarmLabel: string = ''; 
 
   dayOptions: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   constructor(private alarmService: AlarmService, private cdRef: ChangeDetectorRef, private router: Router) {}
 
   ngAfterViewInit(): void {
-    this.alarms = this.alarmService.getAlarms(); // Fetch alarms from the service
+    this.alarms = this.alarmService.getAlarms(); 
     this.alarms.forEach(alarm => {
-      this.isAlarmEnabled[alarm.id] = !alarm.enabled; // Initialize toggle states
+      this.isAlarmEnabled[alarm.id] = !alarm.enabled; 
     });
-    this.alarmService.setalarms(this.alarms); // Set the alarms in the service
+    this.alarmService.setalarms(this.alarms);
     this.cdRef.detectChanges();
   }
 
+  deleteAlarm(alarm: any) {
+    this.alarms = this.alarms.filter(a => a.id !== alarm.id);
+  }
+  
   ngOnDestroy(): void {
     this.alarmService.setalarms(this.alarms);
-    this.alarmService.saveAlarms(this.alarms); // Save alarms to localStorage when component is destroyed
+    this.alarmService.saveAlarms(this.alarms); 
     console.log('Alarms saved to localStorage:', this.alarms);
   }
 
@@ -48,28 +55,30 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
     this.router.navigate(['/soundpicker'], { state: { alarmId: alarm.id } });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    console.log("component loaded");
+  }
 
   getSoundName(id: string): string {
-    const sound = this.alarmService.getSoundById(id); // Fetch sound name by ID
-    return sound; // Return sound name or default message
+    const sound = this.alarmService.getSoundById(id); 
+    return sound; 
   }
 
   toggleAlarm(alarmId: number): void {
     const alarm = this.alarms.find(a => a.id === alarmId);
     if (alarm) {
-      alarm.enabled = !alarm.enabled; // Toggle the enabled state
-      this.alarmService.setalarms(this.alarms); // Update the alarms in the service
-      this.cdRef.detectChanges(); // Trigger change detection to update the view
+      alarm.enabled = !alarm.enabled; 
+      this.alarmService.setalarms(this.alarms); 
+      this.cdRef.detectChanges();
       console.log(`Alarm ID ${alarmId} is now ${alarm.enabled ? 'ON' : 'OFF'}`);
     }
   }
 
   onToggleChange(alarm: Alarm, event: any): void {
-    const isChecked = event.detail.checked; // Get the toggle state
-    this.isAlarmEnabled[alarm.id] = isChecked; // Update the toggle state
-    alarm.enabled = isChecked; // Update the alarm model
-    this.alarmService.setalarms(this.alarms); // Save the updated alarms
+    const isChecked = event.detail.checked; 
+    this.isAlarmEnabled[alarm.id] = isChecked;
+    alarm.enabled = isChecked; 
+    this.alarmService.setalarms(this.alarms); 
     console.log(`Alarm ID ${alarm.id} is now ${isChecked ? 'ON' : 'OFF'}`);
   }
 
@@ -85,15 +94,55 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
       alarm.days.push(day);
     }
   }
+  openAddAlarmModal() {
+    this.isAddAlarmModalOpen = true; 
+  }
 
+  closeAddAlarmModal() {
+    this.isAddAlarmModalOpen = false; 
+    this.newAlarmTime = ''; 
+    this.newAlarmLabel = ''; 
+  }
+  saveNewAlarm() {
+    if (this.newAlarmTime) {
+      const newAlarmTimedate = new Date(this.newAlarmTime); 
+      const currentTime = new Date();
+      const currentDay = currentTime.getDay();
+      const currentTimeStr = currentTime.toTimeString().split(' ')[0]; 
+      const alarmTimeStr = newAlarmTimedate.toTimeString().split(' ')[0]; 
+      if (alarmTimeStr <= currentTimeStr) {
+        newAlarmTimedate.setDate(newAlarmTimedate.getDate() + 1); 
+      }
+  
+      const newAlarm: Alarm = {
+        id: this.alarms.length + 1, 
+        label: this.newAlarmLabel || 'New Alarm',
+        time: this.formatTime(this.newAlarmTime), 
+        days: this.getDaysForTime(newAlarmTimedate), 
+        enabled: true,
+        group: 'Active',
+        sound: '1' 
+      };
+      this.isAlarmEnabled[newAlarm.id] = true;
+      this.alarms.push(newAlarm); 
+      this.alarmService.ScheduleAlarmForDays(newAlarm); 
+      this.alarmService.saveAlarms(this.alarms);
+      console.log('New alarm added:', newAlarm);
+      this.closeAddAlarmModal();
+    } else {
+      console.log('Please select a time for the alarm.');
+    }
+  }
+  
+  
+  getDaysForTime(time: Date): string[] {
+    const selectedDay = time.getDay(); 
+    return [this.dayOptions[selectedDay]];
+  }
+  
   get activeAlarms(): Alarm[] {
     return this.alarms.filter(a => a.group === 'Active');
   }
-
-  get otherAlarms(): Alarm[] {
-    return this.alarms.filter(a => a.group === 'Others');
-  }
-
   startEditing(alarm: Alarm) {
     this.currentlyEditingId = alarm.id;
     this.newLabel = alarm.label;
@@ -101,7 +150,7 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
 
   startEditingTime(alarm: Alarm): void {
     this.currentlyEditingTimeId = alarm.id;
-    this.newTime = this.convertToISOTime(alarm.time); // Initialize newTime with the current alarm time
+    this.newTime = this.convertToISOTime(alarm.time); 
     console.log(`Editing time for Alarm ID ${alarm.id}`);
   }
 
@@ -116,53 +165,53 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const now = new Date();
-    const datePart = now.toISOString().split('T')[0]; // Today's date in YYYY-MM-DD
+    const datePart = now.toISOString().split('T')[0];
 
     const isoTime = `${datePart}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
 
-    return isoTime; // Correct local time in ISO format
+    return isoTime; 
   }
 
   saveTime(alarm: Alarm): void {
     console.log('Save button clicked');
     console.log(`New Time: ${this.newTime}`);
     if (this.newTime) {
-      const formattedTime = this.formatTime(this.newTime); // Format the new time
+      const formattedTime = this.formatTime(this.newTime); 
       if (alarm.time !== formattedTime) {
-        alarm.time = formattedTime; // Update the alarm's time only if it has changed
+        alarm.time = formattedTime; 
         console.log(`Time saved for Alarm ID ${alarm.id}: ${alarm.time}`);
-        this.alarmService.ScheduleAlarmForDays(alarm); // Schedule the alarm
-        this.alarmService.setalarms(this.alarms); // Update alarms in the service
+        this.alarmService.ScheduleAlarmForDays(alarm); 
+        this.alarmService.setalarms(this.alarms); 
       }
-      // Ensure the alarm is turned ON
-      this.isAlarmEnabled[alarm.id] = true; // Set the boolean to true
-      alarm.enabled = true; // Update the alarm model
-      this.alarmService.setalarms(this.alarms); // Save the updated alarms
+     
+      this.isAlarmEnabled[alarm.id] = true; 
+      alarm.enabled = true; 
+      this.alarmService.setalarms(this.alarms);
       console.log(`Alarm ID ${alarm.id} is now ON`);
     }
-    this.currentlyEditingTimeId = ''; // Exit editing mode
-    this.cdRef.detectChanges(); // Trigger change detection to update the view
+    this.currentlyEditingTimeId = ''; 
+    this.cdRef.detectChanges(); 
   }
 
   updateTime(event: any): void {
-    const selectedTime = event.detail.value; // Get the selected time from the event
+    const selectedTime = event.detail.value; 
     if (selectedTime) {
-      this.newTime = selectedTime; // Update the newTime property
+      this.newTime = selectedTime;
       console.log(`Selected time: ${this.newTime}`);
     }
   }
 
   exitTimeEditing(): void {
-    this.currentlyEditingTimeId = ''; // Exit editing mode
+    this.currentlyEditingTimeId = ''; 
   }
 
   cancelTimeEditing(alarm: Alarm): void {
-    this.currentlyEditingTimeId = ''; // Exit editing mode without saving
-    this.isAlarmEnabled[alarm.id] = false; // Set the toggle state to false
-    alarm.enabled = false; // Update the alarm model
-    this.alarmService.setalarms(this.alarms); // Save the updated alarms
+    this.currentlyEditingTimeId = ''; 
+    this.isAlarmEnabled[alarm.id] = false; 
+    alarm.enabled = false;
+    this.alarmService.setalarms(this.alarms); 
     console.log(`Alarm ID ${alarm.id} has been turned OFF.`);
-    this.cdRef.detectChanges(); // Trigger change detection to update the view
+    this.cdRef.detectChanges(); 
   }
 
   formatTime(isoString: string): string {
@@ -170,7 +219,7 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
     const hours = date.getHours();
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'PM' : 'AM';
-    const formattedHours = hours % 12 || 12; // Convert 24-hour time to 12-hour time
+    const formattedHours = hours % 12 || 12; 
     const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
     return `${formattedHours}:${formattedMinutes} ${ampm}`;
   }
@@ -190,6 +239,15 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
       console.log(`Time: ${alarm.time}`);
       console.log(`Days: ${alarm.days}`);
     });
+  }
+
+  onSettings(){
+    console.log("settings");
+    this.router.navigate(['/settings']);
+  }
+  onNotifications(){
+    console.log("notification");
+    this.router.navigate(['/notification']);
   }
 }
 

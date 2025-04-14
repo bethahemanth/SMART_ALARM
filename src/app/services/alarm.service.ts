@@ -20,24 +20,15 @@ export class AlarmService {
     { id: 6, name: 'Feather Wake', path: 'assets/sounds/alarm6.mp3' ,alarmId:6},
   ];
 
-  private alarms: Alarm[] = [
-    { id: 1, label: 'Wake-Up', time: '09:20 AM', days: ['Sun', 'Mon', 'Tue'],enabled: true, group: 'Active',sound:'1' },
-    { id: 2, label: '+ Add Label', time: '09:00 AM', days: ['Sun', 'Mon', 'Tue'], enabled: true, group: 'Active',sound:'2' },
-    { id: 3, label: 'Wake-Up', time: '09:00 AM', days: ['Sun', 'Mon', 'Tue'], enabled: true, group: 'Active' ,sound:'2' },
-    { id: 4, label: 'Wake-Up', time: '09:00 AM', days: ['Sun', 'Mon', 'Tue'], enabled: false, group: 'Active', sound:'3' },
-    { id: 5, label: 'Wake-Up', time: '09:00 AM', days:['Sun', 'Mon', 'Tue'], enabled: false, group: 'Others', sound:'1' },
-    { id: 6, label: '+ Add Label', time: '09:00 AM', days:['Sun', 'Mon', 'Tue'], enabled: false, group: 'Others', sound:'1' },
-  ];
+  private alarms: Alarm[] = []
+    
 
   getAlarms(): Alarm[] {
     const storedAlarms = localStorage.getItem('alarms');
     if (storedAlarms) {
-      return JSON.parse(storedAlarms);
-    } else {
-      // If nothing in localStorage, store initial alarms
-      localStorage.setItem('alarms', JSON.stringify(this.alarms));
-      return this.alarms;
+      this.alarms = JSON.parse(storedAlarms);
     }
+    return this.alarms;
   }
   
   saveAlarms(alarms: Alarm[]): void {
@@ -55,27 +46,39 @@ export class AlarmService {
     }
   }
   
-  ScheduleAlarm(alarm:Alarm){
+  ScheduleAlarm(alarm: Alarm) {
     const alarmTime = new Date(alarm.time);
     if (alarmTime.getTime() < Date.now()) return; // Skip past alarms
-    LocalNotifications.schedule({
+  
+    const notificationData = {
+      id: alarm.id,
+      title: `🔔 ${alarm.label || 'Alarm'}`,
+      time: alarmTime.toLocaleTimeString(),
+      date: alarmTime.toLocaleDateString(),
+      body: `Alarm set for ${alarmTime.toLocaleTimeString()}`
+    };
+  
+ 
+    console.log('📦 Storing notification:', notificationData);
+     LocalNotifications.schedule({
       notifications: [
         {
           id: alarm.id,
-          title: `🔔 ${alarm.label || 'Alarm'}`,
-          body: `Alarm set for ${alarmTime.toLocaleTimeString()}`,
+          title: notificationData.title,
+          body: notificationData.body,
           schedule: { at: alarmTime },
-          channelId: `alarm${alarm.sound||"1"}-channel`,
+          channelId: `alarm${alarm.sound || "1"}-channel`,
           actionTypeId: 'ALARM_ACTIONS',
-          autoCancel:false,
-          silent:false,
+          autoCancel: false,
+          silent: false,
         }
       ]
     }).then(() => {
       console.log(`✅ Alarm scheduled: ${alarm.label} at ${alarm.time}`);
     });
-   }
-   ScheduleAlarmForDays(alarm: Alarm) {
+  }
+
+  ScheduleAlarmForDays(alarm: Alarm) {
     const now = new Date();
   
     const weekdaysMap: { [key: string]: number } = {
@@ -116,6 +119,7 @@ export class AlarmService {
             }
           ]
         }).then(() => {
+          localStorage.setItem('alarms', 'Alarm scheduled for ${day} at ${alarmDate)');
           console.log(`✅ Alarm scheduled for ${day} at ${alarmDate}`);
         });
       } else {
@@ -237,12 +241,18 @@ export class AlarmService {
         console.log('ℹ️ No scheduled alarms to cancel');
       }
   
-      // Step 3: Re-schedule active alarms
-      alarms
-        .filter(alarm => alarm.enabled)
-        .forEach(alarm => this.ScheduleAlarmForDays(alarm));
-    });
-  }
-  
 
+     this.alarms = [];
+
+    alarms.forEach(alarm => {
+      this.alarms.push(alarm); // Add to internal array
+      if (alarm.enabled) {
+        this.ScheduleAlarmForDays(alarm); // Schedule the alarm
+      }
+    });
+
+    // Step 4: Save the updated alarms to localStorage
+    this.saveAlarms(this.alarms);
+  });
+}
 }

@@ -1,0 +1,25 @@
+.settings-page {
+  --background: var(--ion-color-light);
+
+  .settings-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  ion-item {
+    --padding-start: 12px;
+    --inner-padding-end: 12px;
+    border-bottom: 1px solid var(--ion-color-step-150, #ccc);
+  }
+
+  ion-card-title {
+    font-size: 1.4rem;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  ion-button {
+    margin-top: 1rem;
+    border-radius: 8px;
+  }
+}
