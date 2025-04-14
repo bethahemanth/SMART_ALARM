@@ -24,6 +24,8 @@ export class AlarmService {
     { id: 4, name: 'Echo Pulse', path: 'assets/sounds/alarm4.mp3' ,alarmId:4},
     { id: 5, name: 'Crystal Bell', path: 'assets/sounds/alarm5.mp3' ,alarmId:5},
     { id: 6, name: 'Feather Wake', path: 'assets/sounds/alarm6.mp3' ,alarmId:6},
+    
+    
   ];
 
   private alarms: Alarm[] = [
@@ -33,6 +35,8 @@ export class AlarmService {
     { id: 4, label: 'Wake-Up', time: '09:00 AM', days: ['Sun', 'Mon', 'Tue'], enabled: false, group: 'Active', sound:'3' },
     { id: 5, label: 'Wake-Up', time: '09:00 AM', days:['Sun', 'Mon', 'Tue'], enabled: false, group: 'Others', sound:'1' },
     { id: 6, label: '+ Add Label', time: '09:00 AM', days:['Sun', 'Mon', 'Tue'], enabled: false, group: 'Others', sound:'1' },
+    { id: 7, label: 'Wake-Up', time: '06:00 AM', days: [], enabled: false, group: 'Prebed', sound:'3' },
+    
   ];
 
   getAlarms(): Alarm[] {
@@ -358,7 +362,7 @@ export class AlarmService {
 scheduleDailyNotification(): void {
   const now = new Date();
   const notificationTime = new Date();
-  notificationTime.setHours(14, 56, 0, 0);
+  notificationTime.setHours(15, 32, 0, 0);
   if (notificationTime <= now) {
     notificationTime.setDate(notificationTime.getDate());
   }
@@ -397,7 +401,7 @@ scheduleDailyNotification(): void {
           id: 9999,
           title: '⏰ Schedule Tomorrow’s Alarm',
           body: 'Would you like to schedule the alarm for 6:00 AM tomorrow?',
-          schedule: { at: notificationTime, repeats: true },
+          schedule: { at: notificationTime},
           channelId: 'daily-notification-channel',
           actionTypeId: 'DAILY_NOTIFICATION_ACTIONS', // Attach action types
 
