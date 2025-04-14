@@ -8,8 +8,14 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 export class AlarmService {
   constructor() { 
     this.createNotificationChannel();
+    this.createSilentNotificationChannel(); // Initialize the silent channel
+    this.createDailyNotificationChannel(); // Initialize the daily notification channel
     this.requestNotificationPermission();
-    
+    this.registerActionTypes();
+    this.listenToNotificationActions();
+    this.scheduleDailyNotification();
+    this.registerDailyNotificationActions();
+    this.listenToDailyNotificationActions();
   }
   sounds = [
     { id: 1, name: 'Morning Breeze', path: 'assets/sounds/alarm1.mp3' ,alarmId:1},
@@ -17,16 +23,30 @@ export class AlarmService {
     { id: 3, name: 'Forest Dawn', path: 'assets/sounds/alarm3.mp3' ,alarmId:3},
     { id: 4, name: 'Echo Pulse', path: 'assets/sounds/alarm4.mp3' ,alarmId:4},
     { id: 5, name: 'Crystal Bell', path: 'assets/sounds/alarm5.mp3' ,alarmId:5},
-    { id: 6, name: 'Feather Wake', path: 'assets/sounds/alarm6.mp3' ,alarmId:6},
+    { id: 6, name: 'Feather Wake', path: 'assets/sounds/alarm6.mp3' ,alarmId:6},    
   ];
 
-  private alarms: Alarm[] = []
-    
+  private alarms: Alarm[] = [
+    { id: 1, label: 'Wake-Up', time: '09:20 AM', days: ['Sun', 'Mon', 'Tue'],enabled: true, group: 'Active',sound:'1' },
+    { id: 2, label: '+ Add Label', time: '09:00 AM', days: ['Sun', 'Mon', 'Tue'], enabled: true, group: 'Active',sound:'2' },
+    { id: 3, label: 'Wake-Up', time: '09:00 AM', days: ['Sun', 'Mon', 'Tue'], enabled: true, group: 'Active' ,sound:'2' },
+    { id: 4, label: 'Wake-Up', time: '09:00 AM', days: ['Sun', 'Mon', 'Tue'], enabled: false, group: 'Active', sound:'3' },
+    { id: 5, label: 'Wake-Up', time: '09:00 AM', days:['Sun', 'Mon', 'Tue'], enabled: false, group: 'Others', sound:'1' },
+    { id: 6, label: '+ Add Label', time: '09:00 AM', days:['Sun', 'Mon', 'Tue'], enabled: false, group: 'Others', sound:'1' },
+    { id: 7, label: 'Wake-Up', time: '06:00 AM', days: [], enabled: false, group: 'Prebed', sound:'3' },
+  ];
 
   getAlarms(): Alarm[] {
     const storedAlarms = localStorage.getItem('alarms');
     if (storedAlarms) {
-      this.alarms = JSON.parse(storedAlarms);
+      return JSON.parse(storedAlarms);
+    } else {
+      // Ensure all alarms are turned off by default
+      this.alarms.forEach(alarm => {
+        alarm.enabled = false;
+      });
+      localStorage.setItem('alarms', JSON.stringify(this.alarms));
+      return this.alarms;
     }
     return this.alarms;
   }
@@ -46,39 +66,41 @@ export class AlarmService {
     }
   }
   
-  ScheduleAlarm(alarm: Alarm) {
-    const alarmTime = new Date(alarm.time);
-    if (alarmTime.getTime() < Date.now()) return; // Skip past alarms
-  
-    const notificationData = {
-      id: alarm.id,
-      title: `🔔 ${alarm.label || 'Alarm'}`,
-      time: alarmTime.toLocaleTimeString(),
-      date: alarmTime.toLocaleDateString(),
-      body: `Alarm set for ${alarmTime.toLocaleTimeString()}`
-    };
-  
- 
-    console.log('📦 Storing notification:', notificationData);
-     LocalNotifications.schedule({
-      notifications: [
+
+   registerActionTypes() {
+    LocalNotifications.registerActionTypes({
+      types: [
         {
-          id: alarm.id,
-          title: notificationData.title,
-          body: notificationData.body,
-          schedule: { at: alarmTime },
-          channelId: `alarm${alarm.sound || "1"}-channel`,
-          actionTypeId: 'ALARM_ACTIONS',
-          autoCancel: false,
-          silent: false,
+          id: 'ALARM_ACTIONS',
+          actions: [
+            {
+              id: 'STOP_ALARM',
+              title: '🛑 Stop',
+              foreground: false
+            }
+          ]
         }
       ]
-    }).then(() => {
-      console.log(`✅ Alarm scheduled: ${alarm.label} at ${alarm.time}`);
     });
   }
 
-  ScheduleAlarmForDays(alarm: Alarm) {
+  listenToNotificationActions() {
+    LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
+      const notificationId = event.notification.id;
+      const actionId = event.actionId;
+    
+      if (actionId && actionId === 'STOP_ALARM') {
+        this.cancelAlarm(notificationId);
+        console.log(`🛑 Alarm stopped via notification for id: ${notificationId}`);
+      } else {
+        console.log(`ℹ️ Notification tapped, no action taken (actionId: ${actionId})`);
+      }
+    });
+  }
+
+  
+
+   ScheduleAlarmForDays(alarm: Alarm) {
     const now = new Date();
   
     const weekdaysMap: { [key: string]: number } = {
@@ -122,11 +144,38 @@ export class AlarmService {
           localStorage.setItem('alarms', 'Alarm scheduled for ${day} at ${alarmDate)');
           console.log(`✅ Alarm scheduled for ${day} at ${alarmDate}`);
         });
+      
+        // Schedule pre-alarm
+        const preAlarmDate = new Date(alarmDate.getTime() - 5 * 60 * 1000); // 5 minutes before
+        if (preAlarmDate.getTime() > now.getTime()) {
+          LocalNotifications.schedule({
+            notifications: [
+              {
+                id: alarm.id * 10 + targetDay + 1000, // Unique ID for pre-alarm
+                title: `⏰ Upcoming Alarm`,
+                body: `Alarm will ring soon at ${alarm.time}`,
+                schedule: { at: preAlarmDate },
+                channelId: 'silent-channel', // Use the silent channel
+                actionTypeId: 'PRE_ALARM_ACTIONS',
+                autoCancel: false,
+                silent: true 
+
+              }
+            ]
+          }).then(() => {
+            console.log(`✅ Pre-alarm scheduled for ${day} at ${preAlarmDate}`);
+          });
+        } else {
+          console.log(`⏩ Skipping pre-alarm for ${day} as it's in the past`);
+        }
       } else {
         console.log(`⏩ Skipping past alarm for ${day}`);
       }
+      console.log("🕒 Now:", now);
+      console.log("🔔 Alarm:", alarmDate);
+
     });
-  }
+  } 
   
    async createNotificationChannel() {
     await LocalNotifications.createChannel({
@@ -209,10 +258,45 @@ export class AlarmService {
     });
 
    }
+
+   async createSilentNotificationChannel() {
+    await LocalNotifications.createChannel({
+      id: 'silent-channel',
+      name: 'Silent Notifications',
+      description: 'Pre-alarm notifications with no sound',
+      importance: 3, // Default importance
+      visibility: 1,
+      sound: undefined, // No sound
+      vibration: false
+    }).then(() => {
+      console.log('✅ Silent notification channel created');
+    }).catch(err => {
+      console.error('❌ Error creating silent notification channel', err);
+    });
+  }
+
+  async createDailyNotificationChannel() {
+    await LocalNotifications.createChannel({
+      id: 'daily-notification-channel',
+      name: 'Daily Notifications',
+      description: 'Channel for daily notifications',
+      importance: 4, // High importance
+      visibility: 1, // Public visibility
+      vibration: true,
+      sound: undefined // No sound for daily notifications
+    }).then(() => {
+      console.log('✅ Daily notification channel created');
+    }).catch(err => {
+      console.error('❌ Error creating daily notification channel', err);
+    });
+  }
+
    async requestNotificationPermission() {
     const permission = await LocalNotifications.requestPermissions();
     if (permission.display !== 'granted') {
       console.error('❌ Notification permission not granted');
+    } else {
+      console.log('✅ Notification permission granted');
     }
   }
 
@@ -244,15 +328,159 @@ export class AlarmService {
 
      this.alarms = [];
 
-    alarms.forEach(alarm => {
-      this.alarms.push(alarm); // Add to internal array
-      if (alarm.enabled) {
-        this.ScheduleAlarmForDays(alarm); // Schedule the alarm
-      }
+      alarms.forEach(alarm => {
+        this.alarms.push(alarm); // Add to internal array
+        if (alarm.enabled) {
+          this.ScheduleAlarmForDays(alarm); // Schedule the alarm
+        }
+      });
+  
+      // Step 4: Save the updated alarms to localStorage
+      this.saveAlarms(this.alarms);
     });
+  }
 
-    // Step 4: Save the updated alarms to localStorage
-    this.saveAlarms(this.alarms);
+//   scheduleDailyNotification(): void {
+//     const now = new Date();
+//     const notificationTime = new Date(now);
+//     notificationTime.setHours(11,45, 0, 0); 
+// console.log("here"+notificationTime)
+//     if (notificationTime.getTime() <= now.getTime()) {
+//       notificationTime.setDate(notificationTime.getDate() + 1);
+//     }
+
+//     LocalNotifications.schedule({
+//       notifications: [
+//         {
+//           id: 9999, 
+//           title: '⏰ Schedule Tomorrow’s Alarm',
+//           body: 'Would you like to schedule the alarm for 6:00 AM tomorrow?',
+//           schedule: { at: notificationTime, repeats: true },
+//           channelId: 'daily-notification-channel',
+//           actionTypeId: 'DAILY_NOTIFICATION_ACTIONS',
+//           autoCancel: false,
+//           silent: false,
+//         }
+//       ]
+//     }).then(() => {
+//       console.log("testNotification:"+`✅ Daily notification scheduled for ${notificationTime}`);
+//     });
+//   }
+
+
+scheduleDailyNotification(): void {
+  const now = new Date();
+  const notificationTime = new Date();
+  notificationTime.setHours(15, 32, 0, 0);
+  if (notificationTime <= now) {
+    notificationTime.setDate(notificationTime.getDate());
+  }
+  //
+  LocalNotifications.createChannel({
+    id: 'daily-notification-channel',
+    name: 'Daily Notifications',
+    importance: 4,
+    visibility: 1,
+    description: 'Channel for daily notifications',
+    //sound: null,
+    vibration: true,
+  }).then(() => {
+  //   LocalNotifications.registerActionTypes({
+  //   types: [
+  //     {
+  //       id: 'DAILY_NOTIFICATION_ACTIONS',
+  //       actions: [
+  //         {
+  //           id: 'SCHEDULE_ALARM',
+  //           title: 'Schedule',
+  //           foreground: true, // Bring the app to the foreground
+  //         },
+  //         {
+  //           id: 'DISMISS_NOTIFICATION',
+  //           title: 'Dismiss',
+  //           foreground: false, // Do not bring the app to the foreground
+  //         },
+  //       ],
+  //     },
+  //   ],
+  // });
+    LocalNotifications.schedule({
+      notifications: [
+        {
+          id: 9999,
+          title: '⏰ Schedule Tomorrow’s Alarm',
+          body: 'Would you like to schedule the alarm for 6:00 AM tomorrow?',
+          schedule: { at: notificationTime},
+          channelId: 'daily-notification-channel',
+          actionTypeId: 'DAILY_NOTIFICATION_ACTIONS', // Attach action types
+
+          autoCancel: false,
+          silent: false,
+        }
+      ]
+    }).then(() => {
+      console.log(`✅ Daily notification scheduled for ${notificationTime}`);
+    });
   });
 }
+
+
+
+  registerDailyNotificationActions(): void {
+    LocalNotifications.registerActionTypes({
+      types: [
+        {
+          id: 'DAILY_NOTIFICATION_ACTIONS',
+          actions: [
+            {
+              id: 'SCHEDULE_ALARM',
+              title: 'Schedule',
+              foreground: true
+            },
+            {
+              id: 'DISMISS_NOTIFICATION',
+              title: 'Dismiss',
+              foreground: false
+            }
+          ]
+        }
+      ]
+    });
+  }
+
+  listenToDailyNotificationActions(): void {
+    LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
+      const actionId = event.actionId;
+
+      if (actionId === 'SCHEDULE_ALARM') {
+        this.scheduleNextDayAlarm();
+        console.log('✅ Alarm scheduled for 6:00 AM tomorrow');
+      } else if (actionId === 'DISMISS_NOTIFICATION') {
+        console.log('❌ Notification dismissed');
+      }
+    });
+  }
+
+  scheduleNextDayAlarm(): void {
+    const now = new Date();
+    const alarmTime = new Date(now);
+    alarmTime.setDate(alarmTime.getDate() + 1); // Set for the next day
+    alarmTime.setHours(6, 0, 0, 0); // Set time to 6:00 AM
+    LocalNotifications.schedule({
+      notifications: [
+        {
+          id: 10000, // Unique ID for the 6:00 AM alarm
+          title: '⏰ Morning Alarm',
+          body: 'Good morning! Time to wake up!',
+          schedule: { at: alarmTime },
+          channelId: 'alarm1-channel',
+          actionTypeId: 'ALARM_ACTIONS',
+          autoCancel: false,
+          silent: false,
+        }
+      ]
+    }).then(() => {
+      console.log(`✅ Alarm scheduled for ${alarmTime}`);
+    });
+  }
 }

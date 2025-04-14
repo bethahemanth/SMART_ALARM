@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./alarm.component.scss'],
   standalone: false
 })
-export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
+export class AlarmComponent implements OnInit, AfterViewInit {
   alarms: Alarm[] = [];
   selectedAlarmId: number | null = null;
   currentlyEditingId: number | null = null;
@@ -38,11 +38,11 @@ export class AlarmComponent implements OnInit, OnDestroy, AfterViewInit {
     this.alarms = this.alarms.filter(a => a.id !== alarm.id);
   }
   
-  ngOnDestroy(): void {
-    this.alarmService.setalarms(this.alarms);
-    this.alarmService.saveAlarms(this.alarms); 
-    console.log('Alarms saved to localStorage:', this.alarms);
-  }
+  // ngOnDestroy(): void {
+  //   this.alarmService.setalarms(this.alarms);
+  //   this.alarmService.saveAlarms(this.alarms); 
+  //   console.log('Alarms saved to localStorage:', this.alarms);
+  // }
 
   @HostListener('window:beforeunload', ['$event'])
   handleBeforeUnload(event: Event): void {

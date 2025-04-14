@@ -4,7 +4,7 @@ export interface Alarm {
     time: string;
     days: string[];
     enabled: boolean;
-    group: 'Active' | 'Others';
+    group: 'Active' | 'Others' |'Prebed';
     sound:string;
     showDelete?: boolean; 
   }
