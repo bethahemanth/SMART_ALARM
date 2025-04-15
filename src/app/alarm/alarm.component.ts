@@ -1,7 +1,8 @@
-import { AfterViewInit, ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
-import { Alarm } from '../Models/alarm.model';
+import { AfterViewInit, ChangeDetectorRef, Component, DoCheck, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Alarm, Settings } from '../Models/alarm.model';
 import { AlarmService } from '../services/alarm.service';
 import { Router } from '@angular/router';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 @Component({
   selector: 'app-alarm',
@@ -9,7 +10,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./alarm.component.scss'],
   standalone: false
 })
-export class AlarmComponent implements OnInit, AfterViewInit {
+export class AlarmComponent implements OnInit, AfterViewInit,DoCheck {
   alarms: Alarm[] = [];
   selectedAlarmId: number | null = null;
   currentlyEditingId: number | null = null;
@@ -23,7 +24,14 @@ export class AlarmComponent implements OnInit, AfterViewInit {
 
   dayOptions: string[] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  constructor(private alarmService: AlarmService, private cdRef: ChangeDetectorRef, private router: Router) {}
+  constructor(private alarmService: AlarmService, private cdRef: ChangeDetectorRef, private router: Router) {
+    this.listenToNotificationActions();
+  }
+  
+  ngDoCheck(): void {
+      this.settings = this.alarmService.getSettings();
+  }
+  settings!: Settings;
 
   ngAfterViewInit(): void {
     this.alarms = this.alarmService.getAlarms(); 
@@ -33,10 +41,59 @@ export class AlarmComponent implements OnInit, AfterViewInit {
     this.alarmService.setalarms(this.alarms);
     this.cdRef.detectChanges();
   }
-
+  
   deleteAlarm(alarm: any) {
     this.alarms = this.alarms.filter(a => a.id !== alarm.id);
   }
+  convertTo24HourFormat(time12h: string): string {
+    if(this.settings?.timeFormat24Hr === true){
+    const [time, modifier] = time12h.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+  
+    if (modifier === 'PM' && hours !== 12) {
+      hours += 12;
+    }
+    if (modifier === 'AM' && hours === 12) {
+      hours = 0;
+    }
+  
+    // Pad with leading zero if needed
+    const formattedHours = hours.toString().padStart(2, '0');
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+  
+    return `${formattedHours}:${formattedMinutes}`;
+  } 
+  return time12h;
+  }
+  
+    listenToNotificationActions() {
+      LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
+        const notificationId = event.notification.id;
+        const actionId = event.actionId;
+        const alarmId = event.notification.group; // Assuming you set this in the notification data
+        if (actionId === 'SCHEDULE_ALARM') {
+          this.alarmService.scheduleNextDayAlarm();
+          console.log('✅ Alarm scheduled for 6:00 AM tomorrow');
+        } else if (actionId === 'DISMISS_NOTIFICATION') {
+          console.log('❌ Notification dismissed');
+        }
+        else if (actionId && actionId === 'STOP_ALARM') {
+          this.alarmService.cancelAlarm(notificationId);
+          console.log(`🛑 Alarm stopped via notification for id: ${notificationId}`);
+        } 
+        else {
+          console.log("Notification Event: " + JSON.stringify(event));
+          console.log(`ℹ️ Notification tapped, no action taken (actionId: ${actionId})`);
+          // Check if already on the alarm page before navigating
+          if (!this.router.url.includes(`/alarm/${alarmId}`)) {
+            // Use navigateByUrl to avoid issues with activated outlet
+            this.router.navigateByUrl(`/alarm/${alarmId}`);
+          } else {
+            console.log('🔄 Already on the alarm page, no navigation needed');
+          }
+        }
+      });
+    }
   
   // ngOnDestroy(): void {
   //   this.alarmService.setalarms(this.alarms);
@@ -121,7 +178,7 @@ export class AlarmComponent implements OnInit, AfterViewInit {
         days: this.getDaysForTime(newAlarmTimedate), 
         enabled: true,
         group: 'Active',
-        sound: '1' 
+        sound: '3' 
       };
       this.isAlarmEnabled[newAlarm.id] = true;
       this.alarms.push(newAlarm); 

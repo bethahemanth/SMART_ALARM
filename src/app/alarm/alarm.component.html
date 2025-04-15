@@ -5,14 +5,15 @@
 </ion-header>
 
 <ion-content>
-  <div class="section">
-    <h2>Active Alarms</h2>
-    <ng-container *ngFor="let alarm of activeAlarms">
-      <ng-container *ngTemplateOutlet="alarmItemTemplate; context: { alarm: alarm }"></ng-container>
-    </ng-container>
-  </div>
+  <ion-list>
+    <ion-list-header>
+      <ion-label>Active Alarms</ion-label>
+    </ion-list-header>
 
- 
+    <ion-item *ngFor="let alarm of activeAlarms">
+      <ng-container *ngTemplateOutlet="alarmItemTemplate; context: { alarm: alarm }"></ng-container>
+    </ion-item>
+  </ion-list>
 
   <ng-template #alarmItemTemplate let-alarm="alarm">
     <ion-item-sliding>
@@ -45,7 +46,7 @@
         
               <div class="time" (click)="startEditingTime(alarm)">
                 <ng-container *ngIf="currentlyEditingTimeId !== alarm.id">
-                  {{ alarm.time }}
+                  {{ convertTo24HourFormat(alarm.time) }}
                 </ng-container>
               </div>
 

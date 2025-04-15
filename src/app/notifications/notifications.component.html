@@ -1,3 +1,21 @@
-<p>
-  notifications works!
-</p>
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Notifications</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref=""></ion-back-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content >
+ 
+  <ion-card color="medium" *ngFor="let alarm of enabledAlarms">
+        <ion-card-header>
+          <ion-card-title></ion-card-title>
+          <ion-card-subtitle></ion-card-subtitle>
+        </ion-card-header>
+      
+        <ion-card-content >✅ {{ alarm.label }} scheduled for :   {{ alarm.time }} ({{ alarm.days.join(', ') }})</ion-card-content>
+      </ion-card>
+ 
+ </ion-content>

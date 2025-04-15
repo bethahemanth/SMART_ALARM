@@ -1,3 +1,12 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Settings</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref=""></ion-back-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
 <ion-content class="ion-padding settings-page">
 
   <ion-card class="settings-card">
@@ -6,15 +15,14 @@
     </ion-card-header>
 
     <ion-card-content>
-
       <ion-item>
         <ion-label>Time Format (24 Hrs)</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="settings.timeFormat24Hr" (ngModelChange)="logSettingsChange()" color="primary"></ion-toggle>
+        <ion-toggle slot="end" [(ngModel)]="settings.timeFormat24Hr" color="primary"></ion-toggle>
       </ion-item>
 
       <ion-item>
         <ion-label>Snooze Duration</ion-label>
-        <ion-select slot="end" [(ngModel)]="settings.snoozeDuration" (ngModelChange)="logSettingsChange()" interface="popover">
+        <ion-select slot="end" [(ngModel)]="settings.snoozeDuration"  interface="popover">
           <ion-select-option value="5">5 Min</ion-select-option>
           <ion-select-option value="10">10 Min</ion-select-option>
           <ion-select-option value="15">15 Min</ion-select-option>
@@ -24,32 +32,35 @@
       <ion-item>
         <ion-label>Ringtone</ion-label>
         <ion-select slot="end" [(ngModel)]="settings.ringtone" (ngModelChange)="logSettingsChange()" interface="popover">
-          <ion-select-option value="Morning Breeze">Morning Breeze</ion-select-option>
-          <ion-select-option value="Gentle Chimes">Gentle Chimes</ion-select-option>
-          <ion-select-option value="Forest Dawn">Forest Dawn</ion-select-option>
+          <ion-select-option value="1">Morning Breeze</ion-select-option>
+          <ion-select-option value="2">Gentle Chimes</ion-select-option>
+          <ion-select-option value="3">Forest Dawn</ion-select-option>
+          <ion-select-option value="4">Echo Pulse</ion-select-option>
+          <ion-select-option value="5">Crystal Bell</ion-select-option>
+          <ion-select-option value="6">Feather Wake</ion-select-option>
         </ion-select>
       </ion-item>
 
       <ion-item>
         <ion-label>Vibration</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="settings.vibration" (ngModelChange)="logSettingsChange()" color="primary"></ion-toggle>
+        <ion-toggle slot="end" [(ngModel)]="settings.vibration"  color="primary"></ion-toggle>
       </ion-item>
 
       <ion-item>
         <ion-label>Alarm Volume</ion-label>
-        <ion-range [(ngModel)]="settings.alarmVolume" (ngModelChange)="logSettingsChange()" min="0" max="100" color="danger">
+        <ion-range [(ngModel)]="settings.alarmVolume"  min="0" max="100" color="danger">
           <ion-label slot="end">{{ settings.alarmVolume }}%</ion-label>
         </ion-range>
       </ion-item>
 
       <ion-item>
         <ion-label>Dark Theme</ion-label>
-        <ion-toggle slot="end" [(ngModel)]="settings.darkTheme" (ngModelChange)="logSettingsChange()" color="dark"></ion-toggle>
+        <ion-toggle slot="end" [(ngModel)]="settings.darkTheme"  color="dark"></ion-toggle>
       </ion-item>
 
       <ion-item>
         <ion-label>Language</ion-label>
-        <ion-select slot="end" [(ngModel)]="settings.language" (ngModelChange)="logSettingsChange()" interface="popover">
+        <ion-select slot="end" [(ngModel)]="settings.language"  interface="popover">
           <ion-select-option value="English">English</ion-select-option>
           <ion-select-option value="Spanish">Spanish</ion-select-option>
           <ion-select-option value="French">French</ion-select-option>

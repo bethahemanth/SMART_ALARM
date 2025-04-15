@@ -4,11 +4,16 @@ import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { AlarmComponent } from './alarm/alarm.component';
 import { SoundpickerComponent } from './soundpicker/soundpicker.component';
 import { SettingsComponent } from './settings/settings.component'; // Import the SettingsComponent
+import { AlarmactionComponent } from './alarmaction/alarmaction.component';
  // Import the NotificationComponent
 const routes: Routes = [
   {
       path: '',
       component: AlarmComponent
+  },
+  {
+    path:'alarm/:alarmId',
+    component: AlarmactionComponent
   },
   {
     path:'soundpicker',

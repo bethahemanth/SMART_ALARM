@@ -1,0 +1,22 @@
+<ion-content [fullscreen]="true" class="alarm-background">
+  <div class="alarm-container">
+    <div class="alarm-info">
+      <p class="alarm-label">Alarm</p>
+      <h1 class="alarm-time">{{ alarmTime }}</h1>
+    </div>
+
+    <div class="alarm-controls">
+      <ion-button color="danger" fill="clear" (click)="snooze()">
+        Snooze
+      </ion-button>
+
+      <ion-button shape="round" color="danger" (click)="stopAlarm()">
+        <ion-icon name="notifications-off-outline"></ion-icon>
+      </ion-button>
+
+      <ion-button color="danger" fill="clear" (click)="endAlarm()">
+        End
+      </ion-button>
+    </div>
+  </div>
+</ion-content>
